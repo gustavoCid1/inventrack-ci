@@ -1,0 +1,10 @@
+includes:
+    - vendor/larastan/larastan/extension.neon
+
+parameters:
+    paths:
+        - app/
+        - routes/
+        - database/
+    # Nivel 5 de 10: se sube gradualmente conforme el código se estabiliza.
+    level: 5

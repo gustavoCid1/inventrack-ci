@@ -1,0 +1,158 @@
+
+   PASS  Tests\Unit\CalculadoraVentaTest
+  ✓ calcula subtotal iva y total de una venta
+  ✓ el iva aplicado es del 16 por ciento
+  ✓ redondea los importes a dos decimales
+  ✓ rechaza una venta sin productos
+  ✓ rechaza cantidades cero o negativas
+  ✓ rechaza precios negativos
+
+   PASS  Tests\Unit\ProductoStockTest
+  ✓ detecta cuando el stock esta bajo with data set "stock por encima d… 0.02s  
+  ✓ detecta cuando el stock esta bajo with data set "stock igual al mínimo"
+  ✓ detecta cuando el stock esta bajo with data set "stock por debajo del mínimo"
+  ✓ detecta cuando el stock esta bajo with data set "producto agotado"
+
+   PASS  Tests\Feature\Api\ApiAutenticacionTest
+  ✓ entrega un token con credenciales validas                            0.22s  
+  ✓ rechaza credenciales invalidas                                       0.01s  
+  ✓ los endpoints protegidos exigen token                                0.02s  
+
+   PASS  Tests\Feature\Api\ApiProductosTest
+  ✓ lista productos paginados                                            0.03s  
+  ✓ filtra productos con stock bajo                                      0.01s  
+  ✓ muestra el detalle de un producto y 404 si no existe                 0.01s  
+  ✓ solo el administrador crea productos por api                         0.02s  
+  ✓ la api valida el producto                                            0.01s  
+
+   PASS  Tests\Feature\Api\ApiVentasTest
+  ✓ crea una venta y actualiza el inventario                             0.02s  
+  ✓ responde 422 cuando no hay stock suficiente                          0.01s  
+  ✓ valida la estructura de la venta                                     0.01s  
+
+   FAIL  Tests\Feature\AutenticacionTest
+  ⨯ la pantalla de login carga correctamente                             0.35s  
+  ✓ un invitado es redirigido al login                                   0.01s  
+  ✓ un usuario inicia sesion con credenciales validas                    0.01s  
+  ✓ rechaza credenciales incorrectas                                     0.22s  
+
+   PASS  Tests\Feature\InventarioTest
+  ✓ una entrada aumenta el stock y queda registrada                      0.02s  
+  ✓ una salida mayor al stock es rechazada                               0.01s  
+  ✓ rechaza tipos de movimiento desconocidos                             0.01s  
+  ✓ el scope bajo stock filtra correctamente                             0.01s  
+
+   FAIL  Tests\Feature\ProductosWebTest
+  ⨯ el catalogo lista productos y permite buscar                         0.32s  
+  ✓ el administrador puede crear un producto                             0.01s  
+  ✓ valida los datos obligatorios del producto                           0.02s  
+  ✓ no permite sku duplicado                                             0.02s  
+  ✓ el administrador puede editar y eliminar                             0.02s  
+  ✓ un vendedor no puede crear productos                                 0.01s  
+  ⨯ el panel muestra alertas de stock bajo                               0.33s  
+
+   PASS  Tests\Feature\SaludAplicacionTest
+  ✓ el endpoint de salud responde                                        0.01s  
+
+   PASS  Tests\Feature\VentasTest
+  ✓ registrar una venta guarda totales y descuenta inventario            0.01s  
+  ✓ no vende mas de lo que hay en existencia y no deja datos a medias    0.01s  
+  ✓ el punto de venta registra una venta desde el formulario             0.02s  
+  ✓ el punto de venta muestra error si no hay stock                      0.02s  
+  ────────────────────────────────────────────────────────────────────────────  
+   FAILED  Tests\Feature\AutenticacionTest > la pantalla de login carga corr…   
+  Expected response status code [200] but received 500.
+Failed asserting that 500 is identical to 200.
+
+The following exception occurred during the last request:
+
+Illuminate\Foundation\ViteManifestNotFoundException: Vite manifest not found at: public/build/manifest.json in vendor/laravel/framework/src/Illuminate/Foundation/Vite.php:934
+Stack trace:
+
+Next Illuminate\View\ViewException: Vite manifest not found at: public/build/manifest.json (View: resources/views/layouts/app.blade.php) in vendor/laravel/framework/src/Illuminate/Foundation/Vite.php:934
+Stack trace:
+
+Next Illuminate\View\ViewException: Vite manifest not found at: public/build/manifest.json (View: resources/views/layouts/app.blade.php) (View: resources/views/layouts/app.blade.php) in vendor/laravel/framework/src/Illuminate/Foundation/Vite.php:934
+Stack trace:
+
+----------------------------------------------------------------------------------
+
+Vite manifest not found at: public/build/manifest.json (View: resources/views/layouts/app.blade.php) (View: resources/views/layouts/app.blade.php)
+
+  at tests/Feature/AutenticacionTest.php:17
+     13▕ 
+     14▕     #[Test]
+     15▕     public function la_pantalla_de_login_carga_correctamente(): void
+     16▕     {
+  ➜  17▕         $this->get('/login')->assertOk()->assertSee('Iniciar sesión');
+     18▕     }
+     19▕ 
+     20▕     #[Test]
+     21▕     public function un_invitado_es_redirigido_al_login(): void
+
+  ────────────────────────────────────────────────────────────────────────────  
+   FAILED  Tests\Feature\ProductosWebTest > el catalogo lista productos y pe…   
+  Expected response status code [200] but received 500.
+Failed asserting that 500 is identical to 200.
+
+The following exception occurred during the last request:
+
+Illuminate\Foundation\ViteManifestNotFoundException: Vite manifest not found at: public/build/manifest.json in vendor/laravel/framework/src/Illuminate/Foundation/Vite.php:934
+Stack trace:
+
+Next Illuminate\View\ViewException: Vite manifest not found at: public/build/manifest.json (View: resources/views/layouts/app.blade.php) in vendor/laravel/framework/src/Illuminate/Foundation/Vite.php:934
+Stack trace:
+
+Next Illuminate\View\ViewException: Vite manifest not found at: public/build/manifest.json (View: resources/views/layouts/app.blade.php) (View: resources/views/layouts/app.blade.php) in vendor/laravel/framework/src/Illuminate/Foundation/Vite.php:934
+Stack trace:
+
+----------------------------------------------------------------------------------
+
+Vite manifest not found at: public/build/manifest.json (View: resources/views/layouts/app.blade.php) (View: resources/views/layouts/app.blade.php)
+
+  at tests/Feature/ProductosWebTest.php:23
+     19▕         Producto::factory()->create(['nombre' => 'Jabón líquido', 'sku' => 'LIM-001']);
+     20▕ 
+     21▕         $this->actingAs(User::factory()->create())
+     22▕             ->get('/productos?q=Arroz')
+  ➜  23▕             ->assertOk()
+     24▕             ->assertSee('Arroz 1 kg')
+     25▕             ->assertDontSee('Jabón líquido');
+     26▕     }
+     27▕
+
+  ────────────────────────────────────────────────────────────────────────────  
+   FAILED  Tests\Feature\ProductosWebTest > el panel muestra alertas de stoc…   
+  Expected response status code [200] but received 500.
+Failed asserting that 500 is identical to 200.
+
+The following exception occurred during the last request:
+
+Illuminate\Foundation\ViteManifestNotFoundException: Vite manifest not found at: public/build/manifest.json in vendor/laravel/framework/src/Illuminate/Foundation/Vite.php:934
+Stack trace:
+
+Next Illuminate\View\ViewException: Vite manifest not found at: public/build/manifest.json (View: resources/views/layouts/app.blade.php) in vendor/laravel/framework/src/Illuminate/Foundation/Vite.php:934
+Stack trace:
+
+Next Illuminate\View\ViewException: Vite manifest not found at: public/build/manifest.json (View: resources/views/layouts/app.blade.php) (View: resources/views/layouts/app.blade.php) in vendor/laravel/framework/src/Illuminate/Foundation/Vite.php:934
+Stack trace:
+
+----------------------------------------------------------------------------------
+
+Vite manifest not found at: public/build/manifest.json (View: resources/views/layouts/app.blade.php) (View: resources/views/layouts/app.blade.php)
+
+  at tests/Feature/ProductosWebTest.php:92
+     88▕         Producto::factory()->conStock(50)->create(['nombre' => 'Galletas']);
+     89▕ 
+     90▕         $this->actingAs(User::factory()->create())
+     91▕             ->get('/')
+  ➜  92▕             ->assertOk()
+     93▕             ->assertSee('Leche entera')
+     94▕             ->assertDontSee('Galletas');
+     95▕     }
+     96▕ }
+
+
+  Tests:    3 failed, 38 passed (106 assertions)
+  Duration: 1.93s
+

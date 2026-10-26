@@ -1,0 +1,129 @@
+# ---------------------------------------------------------------------------
+# InvenTrack - Pipeline de Integración Continua (CI)
+# Etapas: 1. Checkout -> 2. Preparación -> 3. Build -> 4. Test -> 5. Resultados
+# ---------------------------------------------------------------------------
+name: CI InvenTrack
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main]
+  workflow_dispatch: # permite ejecutarlo a mano desde la pestaña Actions
+
+# Si llega un push nuevo a la misma rama, se cancela la ejecución anterior.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  ci:
+    name: Build y pruebas (PHP ${{ matrix.php }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    strategy:
+      fail-fast: true
+      matrix:
+        php: ['8.3']
+
+    steps:
+      # ---------------- 1. CHECKOUT ----------------
+      - name: "1. Checkout - obtener el código fuente"
+        uses: actions/checkout@v4
+
+      # ---------------- 2. PREPARACIÓN ----------------
+      - name: "2.1 Preparación - instalar PHP ${{ matrix.php }}"
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ matrix.php }}
+          extensions: mbstring, dom, fileinfo, pdo_sqlite, sqlite3, intl
+          coverage: none
+          tools: composer:v2
+
+      - name: "2.2 Preparación - validar composer.json y composer.lock"
+        run: composer validate --strict --no-check-publish
+
+      - name: "2.3 Preparación - caché de dependencias de Composer"
+        uses: actions/cache@v4
+        with:
+          path: vendor
+          key: composer-${{ runner.os }}-php${{ matrix.php }}-${{ hashFiles('composer.lock') }}
+          restore-keys: composer-${{ runner.os }}-php${{ matrix.php }}-
+
+      - name: "2.4 Preparación - instalar dependencias PHP"
+        run: composer install --no-interaction --prefer-dist --no-progress
+
+      - name: "2.5 Preparación - instalar Node.js"
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: "2.6 Preparación - instalar dependencias npm"
+        run: |
+          if [ -f package-lock.json ]; then npm ci; else npm install; fi
+
+      - name: "2.7 Preparación - configurar entorno (.env, llave y base de datos)"
+        run: |
+          cp .env.ci .env
+          php artisan key:generate --ansi
+          touch database/database.sqlite
+          php artisan migrate --force --seed
+
+      # ---------------- 3. BUILD ----------------
+      - name: "3.1 Build - estilo de código PSR-12 (Laravel Pint)"
+        run: vendor/bin/pint --test
+
+      - name: "3.2 Build - análisis estático (PHPStan + Larastan)"
+        run: vendor/bin/phpstan analyse --no-progress --error-format=github --memory-limit=1G
+
+      - name: "3.3 Build - auditoría de seguridad de dependencias"
+        # Informativa: avisa de vulnerabilidades conocidas sin bloquear el pipeline.
+        continue-on-error: true
+        run: composer audit
+
+      - name: "3.4 Build - compilar el frontend (Vite + Tailwind)"
+        run: npm run build
+
+      - name: "3.5 Build - verificar que la aplicación arranca"
+        run: |
+          php artisan about --only=environment
+          php artisan route:list --except-vendor
+          php artisan inventario:alertas
+
+      # ---------------- 4. TEST ----------------
+      - name: "4. Test - pruebas automatizadas (php artisan test)"
+        run: php artisan test --log-junit reports/junit.xml
+
+      # ---------------- 5. RESULTADOS ----------------
+      - name: "5.1 Resultados - publicar reportes como artefactos"
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: reportes-inventrack-php${{ matrix.php }}
+          path: |
+            reports/
+            storage/logs/
+          if-no-files-found: ignore
+          retention-days: 14
+
+      - name: "5.2 Resultados - resumen de la ejecución"
+        if: always()
+        run: |
+          {
+            echo "## Resultado del pipeline InvenTrack"
+            echo ""
+            echo "| Dato | Valor |"
+            echo "|---|---|"
+            echo "| Rama | \`${{ github.ref_name }}\` |"
+            echo "| Commit | \`${{ github.sha }}\` |"
+            echo "| Evento | ${{ github.event_name }} |"
+            echo "| PHP | ${{ matrix.php }} |"
+            echo "| Estado del job | **${{ job.status }}** |"
+            if [ -f reports/junit.xml ]; then
+              python3 scripts/ci-summary.py reports/junit.xml
+            fi
+          } >> "$GITHUB_STEP_SUMMARY"

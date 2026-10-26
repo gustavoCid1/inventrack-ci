@@ -1,0 +1,65 @@
+
+   PASS  Tests\Unit\CalculadoraVentaTest
+  ✓ calcula subtotal iva y total de una venta
+  ✓ el iva aplicado es del 16 por ciento
+  ✓ redondea los importes a dos decimales
+  ✓ rechaza una venta sin productos
+  ✓ rechaza cantidades cero o negativas
+  ✓ rechaza precios negativos
+
+   PASS  Tests\Unit\ProductoStockTest
+  ✓ detecta cuando el stock esta bajo with data set "stock por encima d… 0.02s  
+  ✓ detecta cuando el stock esta bajo with data set "stock igual al mínimo"
+  ✓ detecta cuando el stock esta bajo with data set "stock por debajo del mínimo"
+  ✓ detecta cuando el stock esta bajo with data set "producto agotado"
+
+   PASS  Tests\Feature\Api\ApiAutenticacionTest
+  ✓ entrega un token con credenciales validas                            0.25s  
+  ✓ rechaza credenciales invalidas                                       0.01s  
+  ✓ los endpoints protegidos exigen token                                0.02s  
+
+   PASS  Tests\Feature\Api\ApiProductosTest
+  ✓ lista productos paginados                                            0.03s  
+  ✓ filtra productos con stock bajo                                      0.01s  
+  ✓ muestra el detalle de un producto y 404 si no existe                 0.02s  
+  ✓ solo el administrador crea productos por api                         0.02s  
+  ✓ la api valida el producto                                            0.01s  
+
+   PASS  Tests\Feature\Api\ApiVentasTest
+  ✓ crea una venta y actualiza el inventario                             0.02s  
+  ✓ responde 422 cuando no hay stock suficiente                          0.01s  
+  ✓ valida la estructura de la venta                                     0.01s  
+
+   PASS  Tests\Feature\AutenticacionTest
+  ✓ la pantalla de login carga correctamente                             0.02s  
+  ✓ un invitado es redirigido al login                                   0.01s  
+  ✓ un usuario inicia sesion con credenciales validas                    0.02s  
+  ✓ rechaza credenciales incorrectas                                     0.21s  
+
+   PASS  Tests\Feature\InventarioTest
+  ✓ una entrada aumenta el stock y queda registrada                      0.01s  
+  ✓ una salida mayor al stock es rechazada                               0.01s  
+  ✓ rechaza tipos de movimiento desconocidos                             0.01s  
+  ✓ el scope bajo stock filtra correctamente                             0.01s  
+
+   PASS  Tests\Feature\ProductosWebTest
+  ✓ el catalogo lista productos y permite buscar                         0.02s  
+  ✓ el administrador puede crear un producto                             0.01s  
+  ✓ valida los datos obligatorios del producto                           0.01s  
+  ✓ no permite sku duplicado                                             0.01s  
+  ✓ el administrador puede editar y eliminar                             0.02s  
+  ✓ un vendedor no puede crear productos                                 0.01s  
+  ✓ el panel muestra alertas de stock bajo                               0.01s  
+
+   PASS  Tests\Feature\SaludAplicacionTest
+  ✓ el endpoint de salud responde                                        0.01s  
+
+   PASS  Tests\Feature\VentasTest
+  ✓ registrar una venta guarda totales y descuenta inventario            0.01s  
+  ✓ no vende mas de lo que hay en existencia y no deja datos a medias    0.01s  
+  ✓ el punto de venta registra una venta desde el formulario             0.02s  
+  ✓ el punto de venta muestra error si no hay stock                      0.02s  
+
+  Tests:    41 passed (111 assertions)
+  Duration: 1.04s
+

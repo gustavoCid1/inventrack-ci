@@ -1,0 +1,19 @@
+flowchart TD
+    E(["Evento: push a main/develop<br/>o pull_request a main"]) --> A
+    A["<b>1. Checkout</b><br/>Obtener el código fuente<br/><i>actions/checkout</i>"] --> B
+    B["<b>2. Preparación</b><br/>PHP 8.3 + Composer + Node 20<br/>composer install · npm install<br/>.env · key:generate · migrate --seed"] --> C
+    C["<b>3. Build</b><br/>Pint (estilo) · PHPStan (análisis estático)<br/>composer audit · npm run build<br/>verificar arranque (artisan)"] --> D
+    D["<b>4. Test</b><br/>php artisan test<br/>42 pruebas: Unit + Feature + API"] --> R
+    R{"¿Todas las etapas<br/>terminaron en verde?"}
+    R -- "Sí" --> OK["<b>5. Resultados ✔</b><br/>Check verde en el commit / PR<br/>Reporte JUnit + resumen<br/>Se permite el merge a main"]
+    R -- "No" --> KO["<b>5. Resultados ✘</b><br/>Check rojo · logs del paso que falló<br/>Merge bloqueado<br/>El desarrollador corrige y hace push"]
+    KO -. "nuevo push" .-> E
+
+    classDef etapa fill:#2f6ea5,stroke:#9cc3e6,color:#fff
+    classDef ok fill:#1e7d4f,stroke:#7fd1a8,color:#fff
+    classDef ko fill:#a33a3a,stroke:#e8a0a0,color:#fff
+    classDef ev fill:#f3f6fa,stroke:#2f6ea5,color:#1b2a3a
+    class A,B,C,D etapa
+    class OK ok
+    class KO ko
+    class E,R ev

@@ -1,0 +1,8 @@
+
+  ...................⨯.......................................⨯.
+
+  ──────────────────────────────────────────────────────────────────── Laravel  
+    FAIL   .......................................... 61 files, 2 style issues  
+  ⨯ bootstrap/providers.php fully_qualified_strict_types, single_line_after_i…  
+  ⨯ config/auth.php    fully_qualified_strict_types, single_line_after_imports  
+
