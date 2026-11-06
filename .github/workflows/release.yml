@@ -1,0 +1,223 @@
+# =====================================================================
+#  InvenTrack - Pipeline de Liberación Continua (CD)
+#  Unidad III - Entrega continua
+#
+#  Reutiliza el pipeline de CI de la Unidad II (ci.yml) y agrega:
+#    1. ci             -> ci.yml: checkout, composer, npm, pint, phpstan, pruebas
+#    2. build-release  -> prepara archivos y genera el artefacto versionado
+#    3. validate       -> descarga el artefacto y lo instala en un entorno limpio
+#    4. deploy-preprod -> entrega el artefacto al ambiente de preproducción
+# =====================================================================
+name: CD InvenTrack - Liberacion
+
+on:
+  push:
+    branches: [ main ]
+    tags: [ 'v*.*.*' ]          # v1.0.0, v1.0.1, v1.1.0 ...
+  workflow_dispatch:            # Ejecución manual desde la pestaña Actions
+
+permissions:
+  contents: read
+
+env:
+  PHP_VERSION: '8.3'
+  PHP_EXTENSIONS: mbstring, dom, xml, ctype, curl, zip, bcmath, intl, pdo, pdo_mysql, pdo_sqlite, sqlite3, fileinfo, tokenizer, openssl
+  APP_NAME_SLUG: inventrack-release
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # -------------------------------------------------------------------
+  # 1) INTEGRACIÓN CONTINUA - se reutiliza ci.yml de la Unidad II
+  #    (checkout, composer, npm, Pint, PHPStan, build Vite, pruebas)
+  # -------------------------------------------------------------------
+  ci:
+    name: CI Unidad II
+    uses: ./.github/workflows/ci.yml
+
+  # -------------------------------------------------------------------
+  # 2) GENERACIÓN DEL ARTEFACTO DE LIBERACIÓN
+  #    Sólo se ejecuta si TODO el CI pasó (estilo, análisis y pruebas)
+  # -------------------------------------------------------------------
+  build-release:
+    name: Generar artefacto de liberacion
+    needs: ci
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+      artifact: ${{ steps.version.outputs.artifact }}
+    steps:
+      - name: Obtener codigo desde GitHub
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0          # necesario para leer tags (git describe)
+
+      - name: Configurar PHP ${{ env.PHP_VERSION }}
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ env.PHP_VERSION }}
+          extensions: ${{ env.PHP_EXTENSIONS }}
+          coverage: none
+          tools: composer:v2
+
+      - name: Calcular version (SemVer)
+        id: version
+        run: |
+          if [[ "${GITHUB_REF}" == refs/tags/v* ]]; then
+            VERSION="${GITHUB_REF_NAME}"                       # v1.2.0
+          else
+            BASE=$(git describe --tags --abbrev=0 2>/dev/null || echo "v0.0.0")
+            VERSION="${BASE}-rc.${GITHUB_RUN_NUMBER}+${GITHUB_SHA::7}"   # v1.2.0-rc.15+a1b2c3d
+          fi
+          echo "version=${VERSION}" >> "$GITHUB_OUTPUT"
+          echo "artifact=${APP_NAME_SLUG}-${VERSION//+/_}" >> "$GITHUB_OUTPUT"
+          echo "Version calculada: ${VERSION}"
+
+      - name: Configurar Node (si el proyecto usa Vite)
+        if: hashFiles('package.json') != ''
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Preparar archivos y generar artefacto
+        run: bash scripts/build-release.sh "${{ steps.version.outputs.version }}"
+
+      - name: Verificar contenido del artefacto (archivos requeridos / sensibles)
+        run: |
+          bash scripts/verify-artifact.sh "dist/${{ steps.version.outputs.artifact }}.tar.gz" \
+            | tee dist/verificacion-artefacto.md
+          cat dist/verificacion-artefacto.md >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Publicar artefacto
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ steps.version.outputs.artifact }}
+          path: |
+            dist/${{ steps.version.outputs.artifact }}.tar.gz
+            dist/${{ steps.version.outputs.artifact }}.tar.gz.sha256
+            dist/release.json
+            dist/verificacion-artefacto.md
+          retention-days: 7
+          if-no-files-found: error
+
+  # -------------------------------------------------------------------
+  # 3) VALIDACIÓN DEL ARTEFACTO EN UN ENTORNO LIMPIO
+  #    Simula la instalación en otro servidor: sin código fuente,
+  #    sin Composer install, sólo con el paquete descargado.
+  # -------------------------------------------------------------------
+  validate:
+    name: Validar artefacto (instalacion limpia)
+    needs: build-release
+    runs-on: ubuntu-latest
+    steps:
+      - name: Obtener scripts de validacion
+        uses: actions/checkout@v4
+        with:
+          sparse-checkout: scripts
+
+      - name: Descargar artefacto
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{ needs.build-release.outputs.artifact }}
+          path: descarga
+
+      - name: Configurar PHP ${{ env.PHP_VERSION }}
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ env.PHP_VERSION }}
+          extensions: ${{ env.PHP_EXTENSIONS }}
+          coverage: none
+
+      - name: Comprobar integridad (SHA-256)
+        working-directory: descarga
+        run: sha256sum -c ${{ needs.build-release.outputs.artifact }}.tar.gz.sha256
+
+      - name: Instalar y preparar el paquete en entorno limpio
+        run: |
+          bash scripts/smoke-test-artifact.sh \
+            "descarga/${{ needs.build-release.outputs.artifact }}.tar.gz" \
+            | tee descarga/smoke-test.md
+          cat descarga/smoke-test.md >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Publicar evidencia de validacion
+        uses: actions/upload-artifact@v4
+        with:
+          name: evidencia-validacion-${{ github.run_number }}
+          path: descarga/smoke-test.md
+          retention-days: 30
+
+  # -------------------------------------------------------------------
+  # 4) ENTREGA A PREPRODUCCIÓN
+  #    Requiere el environment "preproduccion" en Settings > Environments
+  #    y los secretos PREPROD_HOST, PREPROD_USER, PREPROD_SSH_KEY.
+  #    Si no existen, el job se omite (no falla el pipeline).
+  # -------------------------------------------------------------------
+  deploy-preprod:
+    name: Entregar a preproduccion
+    needs: [build-release, validate]
+    if: github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+    environment:
+      name: preproduccion
+      url: ${{ vars.PREPROD_URL }}
+    env:
+      PREPROD_HOST: ${{ secrets.PREPROD_HOST }}
+      PREPROD_USER: ${{ secrets.PREPROD_USER }}
+      PREPROD_PATH: ${{ vars.PREPROD_PATH || '/var/www/inventrack-preprod' }}
+      ARTIFACT: ${{ needs.build-release.outputs.artifact }}
+      VERSION: ${{ needs.build-release.outputs.version }}
+    steps:
+      - name: Verificar configuracion del ambiente
+        id: check
+        run: |
+          if [ -z "$PREPROD_HOST" ]; then
+            echo "enabled=false" >> "$GITHUB_OUTPUT"
+            echo "::warning::Secretos de preproduccion no configurados. Se omite el despliegue remoto; el artefacto queda disponible para descarga manual."
+          else
+            echo "enabled=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - uses: actions/checkout@v4
+        if: steps.check.outputs.enabled == 'true'
+        with:
+          sparse-checkout: scripts
+
+      - name: Descargar artefacto
+        if: steps.check.outputs.enabled == 'true'
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{ env.ARTIFACT }}
+          path: dist
+
+      - name: Configurar llave SSH
+        if: steps.check.outputs.enabled == 'true'
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.PREPROD_SSH_KEY }}" > ~/.ssh/id_deploy
+          chmod 600 ~/.ssh/id_deploy
+          ssh-keyscan -H "$PREPROD_HOST" >> ~/.ssh/known_hosts
+
+      - name: Copiar artefacto y script al servidor
+        if: steps.check.outputs.enabled == 'true'
+        run: |
+          scp -i ~/.ssh/id_deploy \
+            "dist/${ARTIFACT}.tar.gz" "dist/${ARTIFACT}.tar.gz.sha256" scripts/deploy-preprod.sh \
+            "${PREPROD_USER}@${PREPROD_HOST}:/tmp/"
+
+      - name: Instalar version en preproduccion
+        if: steps.check.outputs.enabled == 'true'
+        run: |
+          ssh -i ~/.ssh/id_deploy "${PREPROD_USER}@${PREPROD_HOST}" \
+            "cd /tmp && sha256sum -c ${ARTIFACT}.tar.gz.sha256 && \
+             bash /tmp/deploy-preprod.sh /tmp/${ARTIFACT}.tar.gz '${VERSION}' '${PREPROD_PATH}'"
+
+      - name: Resumen
+        run: |
+          {
+            echo "## Entrega a preproduccion"
+            echo "- Version: \`${VERSION}\`"
+            echo "- Artefacto: \`${ARTIFACT}.tar.gz\`"
+            echo "- Despliegue remoto: ${{ steps.check.outputs.enabled == 'true' && 'realizado' || 'omitido (sin secretos)' }}"
+          } >> "$GITHUB_STEP_SUMMARY"
