@@ -6,10 +6,11 @@ name: CI InvenTrack
 
 on:
   push:
-    branches: [main, develop]
+    branches: [develop]   # en main lo ejecuta release.yml como su primera etapa
   pull_request:
     branches: [main]
   workflow_dispatch: # permite ejecutarlo a mano desde la pestaña Actions
+  workflow_call:     # Unidad III: release.yml reutiliza este pipeline de CI
 
 # Si llega un push nuevo a la misma rama, se cancela la ejecución anterior.
 concurrency:
