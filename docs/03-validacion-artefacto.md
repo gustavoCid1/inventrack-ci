@@ -41,19 +41,19 @@ curl -I http://preprod.local/up
 
 | # | Verificación | Método | Esperado | Resultado | Evidencia |
 |---|---|---|---|---|---|
-| 1 | Pruebas automatizadas pasan | Job `ci` | Todas en verde | ✅ OK | `evidencias/09-pipeline-cd.png` |
-| 2 | Artefacto generado y publicado | Job `build-release` | Aparece en *Artifacts* | ✅ OK | `evidencias/10-artifacts.png`, `evidencias/10b-pasos-artefacto.png` |
-| 3 | Descarga del artefacto | `gh run download` / web | Archivo `.tar.gz` | ✅ OK | `evidencias/14-descarga.png` |
+| 1 | Pruebas automatizadas pasan | Job `ci` | Todas en verde | ✅ OK | `evidencias/pipeline-cd.png` |
+| 2 | Artefacto generado y publicado | Job `build-release` | Aparece en *Artifacts* | ✅ OK | `evidencias/10b-pasos-artefacto.png` · Actions #4 → *Summary* → *Artifacts* |
+| 3 | Descarga del artefacto | `gh run download` / web | Archivo `.tar.gz` | ✅ OK | Actions #4 → *Summary* → *Artifacts* |
 | 4 | Integridad SHA-256 | `sha256sum -c` | `OK` | ✅ OK | Job `validate` → paso *Comprobar integridad (SHA-256)* |
-| 5 | Contiene `vendor/`, `public/index.php`, `artisan`, `app/`, `config/`, `routes/` | `verify-artifact.sh` (A) | ✅ en todos | ✅ OK | `evidencias/11-verificacion.png` |
-| 6 | **No** contiene `.env` | `verify-artifact.sh` (B) | Ausente | ✅ OK | `evidencias/11-verificacion.png` |
-| 7 | **No** contiene llaves / credenciales / `auth.json` | `verify-artifact.sh` (B, C) | Ausente | ✅ OK | `evidencias/11-verificacion.png` |
-| 8 | **No** contiene `node_modules`, `tests`, `.git`, logs | `verify-artifact.sh` (B) | Ausente | ✅ OK | `evidencias/11-verificacion.png` |
-| 9 | Sin dependencias de desarrollo (phpunit, faker…) | `verify-artifact.sh` (B) | Ausente | ✅ OK | `evidencias/11-verificacion.png` |
-| 10 | Instalación en entorno limpio (migrate, cache) | `smoke-test-artifact.sh` / job `validate` | ✅ | ✅ OK | `evidencias/12-smoke-test.png` |
-| 11 | Responde HTTP 200 | `curl -I .../up` | `200 OK` | ✅ OK (respuesta HTTP verificada en job `validate`) | `evidencias/12-smoke-test.png` |
-| 12 | Permisos de `storage/` y `bootstrap/cache/` | `ls -la` | `www-data` con escritura | ✅ OK (escritura verificada en job `validate`) | `evidencias/12-smoke-test.png` |
-| 13 | Versión visible | `cat current/VERSION` | `v1.0.0` | ✅ OK (`VERSION` = v1.0.0 en el paquete) | `evidencias/11-verificacion.png`, `evidencias/13-release.png` |
+| 5 | Contiene `vendor/`, `public/index.php`, `artisan`, `app/`, `config/`, `routes/` | `verify-artifact.sh` (A) | ✅ en todos | ✅ OK | Actions #4 → *Summary* → *Verificación del artefacto* |
+| 6 | **No** contiene `.env` | `verify-artifact.sh` (B) | Ausente | ✅ OK | Actions #4 → *Summary* → *Verificación del artefacto* |
+| 7 | **No** contiene llaves / credenciales / `auth.json` | `verify-artifact.sh` (B, C) | Ausente | ✅ OK | Actions #4 → *Summary* → *Verificación del artefacto* |
+| 8 | **No** contiene `node_modules`, `tests`, `.git`, logs | `verify-artifact.sh` (B) | Ausente | ✅ OK | Actions #4 → *Summary* → *Verificación del artefacto* |
+| 9 | Sin dependencias de desarrollo (phpunit, faker…) | `verify-artifact.sh` (B) | Ausente | ✅ OK | Actions #4 → *Summary* → *Verificación del artefacto* |
+| 10 | Instalación en entorno limpio (migrate, cache) | `smoke-test-artifact.sh` / job `validate` | ✅ | ✅ OK | Actions #4 → *Summary* → *Prueba de instalación* |
+| 11 | Responde HTTP 200 | `curl -I .../up` | `200 OK` | ✅ OK (respuesta HTTP verificada en job `validate`) | Actions #4 → *Summary* → *Prueba de instalación* |
+| 12 | Permisos de `storage/` y `bootstrap/cache/` | `ls -la` | `www-data` con escritura | ✅ OK (escritura verificada en job `validate`) | Actions #4 → *Summary* → *Prueba de instalación* |
+| 13 | Versión visible | `cat current/VERSION` | `v1.0.0` | ✅ OK (`VERSION` = v1.0.0 en el paquete) | `evidencias/13-release.png` · Actions #4 → *Summary* |
 
 ## 4.5 Observaciones
 
@@ -69,10 +69,14 @@ El artefacto **`v1.0.0`** **cumple** los criterios definidos en la Parte 1.4: pa
 
 ## 4.7 Evidencias
 
-![Pipeline v1.0.0](evidencias/09-pipeline-cd.png)
-![Artifacts](evidencias/10-artifacts.png)
+Las tablas completas de verificación y de prueba de instalación se encuentran en el *Summary* de la [ejecución #4](https://github.com/gustavoCid1/inventrack-ci/actions/workflows/release.yml) (tag `v1.0.0`), junto con el artefacto `inventrack-release-v1.0.0` descargable.
+
+![Pipeline v1.0.0](evidencias/pipeline-cd.png)
+
+![Etapas del pipeline](evidencias/el%20men%C3%BA%20a%20la%20vista%2C%20y%20las%204%20etapas%20est%C3%A1n%20en%20verde.png)
+
+![Diagrama de etapas](evidencias/diagrama%20de%20las%20etapas%20conectadas.png)
+
 ![Pasos del artefacto](evidencias/10b-pasos-artefacto.png)
-![Verificación del artefacto](evidencias/11-verificacion.png)
-![Prueba de instalación](evidencias/12-smoke-test.png)
+
 ![Release v1.0.0](evidencias/13-release.png)
-![Descarga](evidencias/14-descarga.png)
