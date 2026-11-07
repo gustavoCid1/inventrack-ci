@@ -1,6 +1,6 @@
 # Parte 1. Diseño del proceso de liberación
 
-> Proyecto: **InvenTrack** · Alumno: **[TU NOMBRE]** · Matrícula: **[MATRÍCULA]**
+> Proyecto: **InvenTrack** · Alumno: **[gustavo angel cid flores]** · Matrícula: **[222310413]**
 
 ## 1.1 Pasos para preparar una versión liberable
 
@@ -14,7 +14,7 @@ El workflow `release.yml` **reutiliza el pipeline de CI de la Unidad II** (`ci.y
 | 3 | Validar `composer.json` y `composer.lock` | `composer validate --strict` | `ci` (ci.yml) |
 | 4 | Instalar dependencias PHP y npm | `composer install` · `npm ci` | `ci` (ci.yml) |
 | 5 | Estilo y análisis estático | `pint --test` · `phpstan analyse` | `ci` (ci.yml) |
-| 5b | Ejecutar pruebas automatizadas | `php artisan test` | `ci` (ci.yml) |
+| 5b | Ejecutar pruebas automatizadas | `php esartisan test` | `ci` (ci.yml) |
 | 6 | Calcular el número de versión | `git describe` / tag `vX.Y.Z` | `build-release` |
 | 7 | Exportar sólo archivos versionados | `git archive HEAD` | `build-release` |
 | 8 | Quitar archivos de desarrollo (tests, .github, phpunit…) | `scripts/build-release.sh` | `build-release` |
