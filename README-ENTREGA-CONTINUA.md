@@ -2,10 +2,10 @@
 
 | Dato | Valor |
 |---|---|
-| Alumno | **[TU NOMBRE COMPLETO]** |
-| Matrícula | **[MATRÍCULA]** |
-| Grupo / Materia | **[GRUPO] – [MATERIA]** |
-| Docente | **[NOMBRE DEL DOCENTE]** |
+| Alumno | **[gustavo angel cid flores ]** |
+| Matrícula | **[222310413]** |
+| Grupo / Materia | **[102] – [Gestión del Proceso de Desarrollo de Software]** |
+| Docente | **[roberto vinicio camacho]** |
 | Repositorio | `https://github.com/gustavoCid1/inventrack-ci` |
 | Versión entregada | `v1.0.0` |
 
