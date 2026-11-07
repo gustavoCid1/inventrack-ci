@@ -63,3 +63,6 @@ curl -I http://preprod.local/up
 ## 4.6 Conclusión
 
 [Resultado global: el artefacto `v1.0.0` ☐ cumple / ☐ no cumple los criterios definidos en la Parte 1.4 y ☐ está / ☐ no está listo para validación funcional en preproducción.]
+
+   ## Evidencias
+   ![Release v1.0.0](evidencias/13-release.png)
