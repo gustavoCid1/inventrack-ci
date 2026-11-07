@@ -1,6 +1,6 @@
 # Parte 3. Configuración del ambiente de preproducción
 
-> Alumno: **[TU NOMBRE]** · Matrícula: **[MATRÍCULA]** · Fecha: **[FECHA]**
+> Alumno: **[gustavo angel cid flores ]** · Matrícula: **[222310413]** · Fecha: **[06/11/26]**
 
 ## 3.1 Tipo de ambiente
 
